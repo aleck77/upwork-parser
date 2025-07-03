@@ -52,23 +52,41 @@ class UpworkJobParser {
           'Sec-Fetch-Dest': 'document',
           'Sec-Fetch-Mode': 'navigate',
           'Sec-Fetch-Site': 'none',
-          'Cache-Control': 'max-age=0'
+          'Cache-Control': 'max-age=0',
+          'DNT': '1',
+          'Pragma': 'no-cache',
+          'Referer': 'https://www.upwork.com/'
         }
       });
       
       this.page = await context.newPage();
+      // Загружаем cookies
+      const cookiesPath = path.join(__dirname, 'upwork-cookies.json');
+      if (fs.existsSync(cookiesPath)) {
+        const cookies = JSON.parse(fs.readFileSync(cookiesPath, 'utf8'));
+        await context.addCookies(cookies);
+        console.log('Cookies успешно загружены и применены');
+      }
       
-      // Убираем следы автоматизации
+      // Маскировка fingerprint и антибот-детектов
       await this.page.addInitScript(() => {
-        delete window.navigator.webdriver;
-        
-        Object.defineProperty(navigator, 'plugins', {
-          get: () => [1, 2, 3, 4, 5]
-        });
-        
-        Object.defineProperty(navigator, 'languages', {
-          get: () => ['en-US', 'en']
-        });
+        // Удаляем webdriver
+        Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+        // Маскируем плагины
+        Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
+        // Маскируем языки
+        Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
+        // Маскируем разрешение
+        Object.defineProperty(window, 'chrome', { get: () => ({ runtime: {} }) });
+        // Маскируем permissions
+        const originalQuery = window.navigator.permissions.query;
+        window.navigator.permissions.query = (parameters) => (
+          parameters.name === 'notifications' ?
+            Promise.resolve({ state: Notification.permission }) :
+            originalQuery(parameters)
+        );
+        // Маскируем userAgentData
+        Object.defineProperty(navigator, 'userAgentData', { get: () => undefined });
       });
       
       console.log('Браузер инициализирован успешно');
