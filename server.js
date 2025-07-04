@@ -16,6 +16,11 @@ const configMap = {
 const app = express();
 app.use(express.json());
 
+// Новый обработчик для GET /
+app.get('/', (req, res) => {
+  res.send('API is running');
+});
+
 app.post('/parse', async (req, res) => {
   const { site, configName } = req.body;
   const ParserClass = parserMap[site];

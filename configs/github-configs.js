@@ -7,6 +7,10 @@ module.exports = {
     py_fastapi: {
       keywords: 'fastapi',
       language: 'Python'
+    },
+    js_n8n: {
+      keywords: 'n8n',
+      language: 'JavaScript'
     }
   }
 }; 
